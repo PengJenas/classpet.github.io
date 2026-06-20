@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级宠物园</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"> -->
+    <script src="./fontawesome.min.js"></script>
+
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="top-nav">
+            <div class="nav-left">
+                <div class="logo-container" style="display: flex; align-items: center; gap: 10px; margin-right: 15px;">
+                    <div class="logo-pet"><i class="fas fa-paw"></i></div>
+                    <h1 style="font-size: 18px; color: #4a4c8a; margin: 0;">班级宠物园</h1>
+                </div>
+                <button class="nav-btn" id="batchBtn"><i class="fas fa-users"></i> 批量</button>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索学生...">
+                </div>
+            </div>
+            <div class="nav-right">
+                <button class="nav-btn" id="shopBtn"><i class="fas fa-store"></i> 小卖部</button>
+                <button class="nav-btn" id="rankingBtn"><i class="fas fa-trophy"></i> 光荣榜</button>
+                <button class="nav-btn" id="undoBtn"><i class="fas fa-undo"></i> 撤回</button>
+                <button class="nav-btn" id="settingsBtn"><i class="fas fa-cog"></i> 设置</button>
+            </div>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="main-content">
+            <div id="offlineBanner" style="display: none; background: #fff3cd; color: #856404; text-align: center; padding: 8px 16px; font-size: 13px; border-bottom: 1px solid #ffc107;">
+                <i class="fas fa-exclamation-triangle"></i> 无法连接服务器，当前显示的是本地缓存数据，可能不是最新状态。
+            </div>
+            <div class="class-title">
+                <div class="batch-actions" id="batchActions" style="display: none; align-items: center; gap: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="selectAllCheckbox"> 全选
+                    </label>
+                    <button class="nav-btn" id="batchScoreBtn" style="background-color: #22c55e; color: white;"><i class="fas fa-star"></i> 批量评分</button>
+                    <button class="nav-btn" id="cancelBatchBtn" style="background-color: #95a5a6; color: white;">取消批量</button>
+                </div>
+            </div>
+            
+            <div class="student-grid" id="studentGrid">
+                <!-- 卡片由 JavaScript 动态生成 -->
+            </div>
+        </main>
+    </div>
+
+    <!-- 学生档案模态框 -->
+    <div class="modal" id="studentProfileModal">
+        <div class="modal-content profile-modal-content">
+            <div class="modal-header">
+                <div class="profile-header-title">
+                    <h2><i class="fas fa-history"></i> 宠物档案 · <span id="profileStudentNameTitle"></span></h2>
+                    <span class="profile-subtitle">养成与记录</span>
+                </div>
+                <span class="close-btn" id="closeProfileModalBtn">&times;</span>
+            </div>
+            
+            <div class="profile-layout">
+                <!-- 左侧：学生与宠物信息 -->
+                <div class="profile-left">
+                    <div class="profile-card">
+                        <div class="profile-pet-image-container">
+                            <img id="profilePetImage" src="" alt="宠物">
+                        </div>
+                        <div class="profile-student-info">
+                            <div class="profile-name-level">
+                                <h3 id="profileStudentName"></h3>
+                                <div class="profile-level" id="profileLevel">Lv.1</div>
+                            </div>
+                            <div class="profile-pet-type">
+                                <span>当前宠物</span>
+                                <strong id="profilePetType"></strong>
+                            </div>
+                        </div>
+                        <div class="profile-progress">
+                            <div class="profile-exp-text">
+                                <span>经验值</span>
+                                <strong id="profileExpText">0/5</strong>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" id="profileExpBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="profile-exp-hint" id="profileExpHint">升级到下一级，还需 5 经验</div>
+                        </div>
+                        <div class="profile-medals">
+                            <div class="profile-medals-label"><i class="fas fa-medal" style="color: #fbbf24;"></i> 可用勋章</div>
+                            <strong id="profileMedalsCount">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧：功能标签页 -->
+                <div class="profile-right">
+                    <div class="profile-tabs">
+                        <div class="profile-tab active" id="tabScoreBtn"><i class="fas fa-star"></i> 评价打分</div>
+                        <div class="profile-tab" id="tabHistoryBtn"><i class="fas fa-history"></i> 历史记录</div>
+                    </div>
+                    
+                    <!-- 评价打分区域 -->
+                    <div class="profile-tab-content active" id="tabScoreContent">
+                        <form id="recordForm" class="record-form">
+                            <input type="hidden" id="studentNameInput" name="name">
+                            <div class="form-group">
+                                <label>操作积分：</label>
+                                <div class="score-options" style="flex-wrap: wrap; gap: 8px;">
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #f0fdf4; border-color: #bbf7d0; padding: 12px 5px;"><input type="radio" name="score" value="1" required> <span style="color: #22c55e; font-size: 1.2em; font-weight: bold;">+1</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #f0fdf4; border-color: #bbf7d0; padding: 12px 5px;"><input type="radio" name="score" value="2"> <span style="color: #22c55e; font-size: 1.2em; font-weight: bold;">+2</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #f0fdf4; border-color: #bbf7d0; padding: 12px 5px;"><input type="radio" name="score" value="3"> <span style="color: #22c55e; font-size: 1.2em; font-weight: bold;">+3</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #f0fdf4; border-color: #bbf7d0; padding: 12px 5px;"><input type="radio" name="score" value="4"> <span style="color: #22c55e; font-size: 1.2em; font-weight: bold;">+4</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #f0fdf4; border-color: #bbf7d0; padding: 12px 5px;"><input type="radio" name="score" value="5"> <span style="color: #22c55e; font-size: 1.2em; font-weight: bold;">+5</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #fef2f2; border-color: #fecaca; padding: 12px 5px;"><input type="radio" name="score" value="-1"> <span style="color: #ef4444; font-size: 1.2em; font-weight: bold;">-1</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #fef2f2; border-color: #fecaca; padding: 12px 5px;"><input type="radio" name="score" value="-2"> <span style="color: #ef4444; font-size: 1.2em; font-weight: bold;">-2</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #fef2f2; border-color: #fecaca; padding: 12px 5px;"><input type="radio" name="score" value="-3"> <span style="color: #ef4444; font-size: 1.2em; font-weight: bold;">-3</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #fef2f2; border-color: #fecaca; padding: 12px 5px;"><input type="radio" name="score" value="-4"> <span style="color: #ef4444; font-size: 1.2em; font-weight: bold;">-4</span></label>
+                                        <label class="score-radio" style="flex: 1 1 calc(20% - 8px); background-color: #fef2f2; border-color: #fecaca; padding: 12px 5px;"><input type="radio" name="score" value="-5"> <span style="color: #ef4444; font-size: 1.2em; font-weight: bold;">-5</span></label>
+                                    </div>
+                            </div>
+                            <button type="submit" class="submit-btn" id="submitBtn">
+                                <i class="fas fa-paper-plane"></i> 提交
+                            </button>
+                            <div id="statusMessage" class="status-message"></div>
+                        </form>
+                    </div>
+
+                    <!-- 历史记录区域 -->
+                    <div class="profile-tab-content" id="tabHistoryContent">
+                        <div id="redemptionHistoryList" class="history-list">
+                            <!-- 动态生成历史记录 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置/批量导入模态框 -->
+    <div class="modal" id="setupModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-users-cog"></i> 班级系统设置</h2>
+                <span class="close-btn" id="closeSetupModalBtn">&times;</span>
+            </div>
+
+            <form id="setupForm" class="record-form" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- 班级数据接口 -->
+                <div class="form-group" style="background: #f5f3ff; padding: 16px; border-radius: 10px; border: 1px solid #ddd6fe; margin: 0;">
+                    <label for="apiUrlInput" style="font-weight: bold;">班级数据接口 (API)</label>
+                    <p style="font-size:12px; color:#888; margin-bottom:8px; line-height: 1.4;">
+                        填写 QuickForm 接口地址，例如：<code>https://quickform.cn/api/s0bqsjoeon</code>
+                    </p>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="apiUrlInput" style="flex: 1; padding: 10px; border-radius: 8px; border: 2px solid #ddd6fe; font-family: inherit; outline: none; transition: border-color 0.3s;" onfocus="this.style.borderColor='#8172d5'" onblur="this.style.borderColor='#ddd6fe'" placeholder="https://quickform.cn/api/你的班级ID" required>
+                        <button type="button" id="saveApiBtn" class="submit-btn" style="background-color: #8172d5; width: 80px; flex-shrink: 0;">
+                            <i class="fas fa-save"></i> 保存
+                        </button>
+                    </div>
+                    <div id="apiStatusMessage" class="status-message" style="margin-top: 8px;"></div>
+                </div>
+
+                <!-- 删除学生 -->
+                <div class="form-group" style="background: #fff5f5; padding: 16px; border-radius: 10px; border: 1px solid #fecaca; margin: 0;">
+                    <label style="font-weight: bold;">删除学生</label>
+                    <p style="font-size:12px; color:#e74c3c; margin-bottom:8px; line-height: 1.4;">
+                        <i class="fas fa-info-circle"></i> 删除后学生将从列表中隐藏，重新导入同名学生即可恢复。
+                    </p>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="deleteStudentSelect" style="flex: 1; padding: 10px; border-radius: 8px; border: 2px solid #fecaca; font-family: inherit; outline: none; transition: border-color 0.3s;" onfocus="this.style.borderColor='#e74c3c'" onblur="this.style.borderColor='#fecaca'">
+                            <option value="">-- 请选择学生 --</option>
+                        </select>
+                        <button type="button" id="deleteStudentSetupBtn" class="submit-btn" style="background-color: #e74c3c; width: 80px; flex-shrink: 0;">
+                            <i class="fas fa-trash-alt"></i> 删除
+                        </button>
+                    </div>
+                    <div id="deleteStatusMessage" class="status-message" style="margin-top: 8px;"></div>
+                </div>
+
+                <!-- 添加学生 -->
+                <div class="form-group" style="background: #f0fdf4; padding: 16px; border-radius: 10px; border: 1px solid #bbf7d0; margin: 0;">
+                    <label for="bulkInput" style="font-weight: bold;">添加学生</label>
+                    <p style="font-size:12px; color:#888; margin-bottom:8px; line-height: 1.4;">
+                        格式：<strong>姓名 宠物</strong>，每行一个。宠物名省略则使用默认宠物。<br>
+                        <strong>示例：</strong>张三 / 李四 天狗
+                    </p>
+                    <textarea id="bulkInput" rows="6" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #bbf7d0; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.3s; box-sizing: border-box;" onfocus="this.style.borderColor='#22c55e'" onblur="this.style.borderColor='#bbf7d0'" placeholder="在这里粘贴学生名单..."></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" id="addStudentsBtn" class="submit-btn" style="background-color: #22c55e; flex: 2;">
+                            <i class="fas fa-plus"></i> 添加学生
+                        </button>
+                        <button type="button" id="clearDataBtn" class="submit-btn" style="background-color: #95a5a6; flex: 1;">
+                            <i class="fas fa-eraser"></i> 清空
+                        </button>
+                    </div>
+                    <div id="addStatusMessage" class="status-message" style="margin-top: 8px;"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 小卖部模态框 -->
+    <div class="modal" id="shopModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-store"></i> 小卖部兑换</h2>
+                <span class="close-btn" id="closeShopModalBtn">&times;</span>
+            </div>
+            
+            <form id="shopForm" class="record-form">
+                <div class="form-group">
+                    <label>选择兑换学生：</label>
+                    <input type="hidden" id="shopSelectedStudentInput" name="studentName">
+                    <div id="shopStudentGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; padding: 5px;">
+                        <!-- 动态生成学生网格按钮 -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择奖品：</label>
+                    <div class="score-options shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <label class="score-radio shop-item-card">
+                            <input type="radio" name="shopItem" value="1,作业减半卡" required> 
+                            <span>
+                                <div class="shop-item-icon">🎫</div>
+                                <div class="shop-item-name">作业减半卡</div>
+                                <div class="shop-item-cost">1 枚勋章</div>
+                            </span>
+                        </label>
+                        <label class="score-radio shop-item-card">
+                            <input type="radio" name="shopItem" value="2,作业免做卡"> 
+                            <span>
+                                <div class="shop-item-icon">👑</div>
+                                <div class="shop-item-name">作业免做卡</div>
+                                <div class="shop-item-cost">2 枚勋章</div>
+                            </span>
+                        </label>
+                        <label class="score-radio shop-item-card">
+                            <input type="radio" name="shopItem" value="1,免除值日卡"> 
+                            <span>
+                                <div class="shop-item-icon">🧹</div>
+                                <div class="shop-item-name">免除值日卡</div>
+                                <div class="shop-item-cost">1 枚勋章</div>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="shopSubmitBtn" style="background-color: #f39c12;">
+                    <i class="fas fa-exchange-alt"></i> 确认兑换
+                </button>
+                <div id="shopStatusMessage" class="status-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 换养宠物模态框 -->
+    <div class="modal" id="changePetModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="changePetStudentName"><i class="fas fa-sync-alt"></i> 换养宠物</h2>
+                <span class="close-btn" id="closeChangePetModalBtn">&times;</span>
+            </div>
+            
+            <form id="changePetForm" class="record-form">
+                <input type="hidden" id="changePetStudentInput" name="name">
+                <div class="form-group">
+                    <div id="petCategoryTabs" class="pet-category-tabs">
+                        <!-- 动态生成分类标签 -->
+                    </div>
+                    <div id="petSelectionGrid" class="pet-selection-grid">
+                        <!-- 动态生成宠物卡片 -->
+                    </div>
+                    <input type="hidden" id="petTypeSelect" required>
+                </div>
+
+                <button type="submit" class="submit-btn" id="changePetSubmitBtn" style="background-color: #3498db; margin-top: 15px;">
+                    <i class="fas fa-check"></i> 确认更换
+                </button>
+                <div id="changePetStatusMessage" class="status-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 光荣榜模态框 -->
+    <div class="modal" id="rankingModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-trophy" style="color: #f1c40f;"></i> 班级光荣榜 (前5名)</h2>
+                <span class="close-btn" id="closeRankingModalBtn">&times;</span>
+            </div>
+            <div id="rankingList" style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <!-- 动态生成排行榜 -->
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- 底部备案信息 -->
+    <footer style="text-align: center; padding: 20px 0; font-size: 15px; color: #999;">
+        <span style="margin-right: 15px;"></span>Jenas的教学工具&nbsp; &nbsp;229944199@qq.com</span> &nbsp; &nbsp;
+    </footer>
+
+
+    <script src="./pets-data-local.js"></script>
+    <script src="./script.js"></script>
+</body>
+</html>
